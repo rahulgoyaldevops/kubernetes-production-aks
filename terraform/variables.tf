@@ -36,7 +36,7 @@ variable "common_tags" {
   type        = map(string)
   default = {
     ManagedBy   = "Terraform"
-    Architect   = "Rahul Goyal"
+    EngineeringLead = "Rahul Goyal"
     CostCenter  = "CoreInfra"
     Tier        = "Tier-1 Production"
   }
