@@ -1,6 +1,6 @@
-# ============================================================================
+﻿# ============================================================================
 # Production Enterprise Azure Kubernetes Service (AKS) Architecture
-# Designed & Implemented by: Rahul Goyal (14+ Years)
+# Designed & Implemented by: Rahul Goyal (14+ Years Total IT | Senior DevOps Engineer)
 # ============================================================================
 
 terraform {
@@ -33,13 +33,15 @@ resource "azurerm_log_analytics_workspace" "aks_logs" {
   tags                = var.common_tags
 }
 
-# Production AKS Cluster with Multi-Zone Resiliency & Calico Network Policy
+# Production AKS Cluster with Multi-Zone Resiliency, Calico CNI & Workload Identity
 resource "azurerm_kubernetes_cluster" "aks" {
-  name                = "aks-${var.environment}-${var.workload_name}"
-  location            = azurerm_resource_group.aks_rg.location
-  resource_group_name = azurerm_resource_group.aks_rg.name
-  dns_prefix          = "aks-${var.environment}-${var.workload_name}"
-  kubernetes_version  = var.kubernetes_version
+  name                      = "aks-${var.environment}-${var.workload_name}"
+  location                  = azurerm_resource_group.aks_rg.location
+  resource_group_name       = azurerm_resource_group.aks_rg.name
+  dns_prefix                = "aks-${var.environment}-${var.workload_name}"
+  kubernetes_version        = var.kubernetes_version
+  oidc_issuer_enabled       = true
+  workload_identity_enabled = true
 
   default_node_pool {
     name                 = "systempool"
@@ -49,6 +51,7 @@ resource "azurerm_kubernetes_cluster" "aks" {
     auto_scaling_enabled = true
     os_disk_type         = "Ephemeral"
     zones                = [1, 2, 3]
+    vnet_subnet_id       = azurerm_subnet.aks_nodes_snet.id
 
     node_labels = {
       "role"        = "system"
@@ -60,7 +63,7 @@ resource "azurerm_kubernetes_cluster" "aks" {
     type = "SystemAssigned"
   }
 
-  # Azure CNI + Calico for fine-grained microsegmentation
+  # Azure CNI + Calico for fine-grained zero-trust microsegmentation
   network_profile {
     network_plugin    = "azure"
     network_policy    = "calico"
@@ -79,7 +82,7 @@ resource "azurerm_kubernetes_cluster" "aks" {
   tags = var.common_tags
 }
 
-# Dedicated User Workload Node Pool
+# Dedicated User Workload Node Pool (Isolated from System Critical Services)
 resource "azurerm_kubernetes_cluster_node_pool" "user_workloads" {
   name                  = "userpool"
   kubernetes_cluster_id = azurerm_kubernetes_cluster.aks.id
@@ -89,6 +92,7 @@ resource "azurerm_kubernetes_cluster_node_pool" "user_workloads" {
   auto_scaling_enabled  = true
   os_disk_type          = "Ephemeral"
   zones                 = [1, 2, 3]
+  vnet_subnet_id        = azurerm_subnet.aks_nodes_snet.id
 
   node_labels = {
     "tier"        = "backend-apps"
