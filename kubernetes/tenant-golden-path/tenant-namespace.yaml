@@ -1,0 +1,94 @@
+# ============================================================================
+# Enterprise Tenant Golden Path: Namespace, Quotas, Limits & Isolation
+# Platform Engineering Soft Multi-Tenancy Architecture
+# Author: Rahul Goyal (14+ Years Total IT | Senior DevOps Engineer)
+# ============================================================================
+
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: core-apps
+  labels:
+    tier: production
+    pod-security.kubernetes.io/enforce: baseline
+    pod-security.kubernetes.io/enforce-version: latest
+    pod-security.kubernetes.io/warn: restricted
+    pod-security.kubernetes.io/warn-version: latest
+---
+# FinOps & Stability: Prevent Noisy Neighbors with strict compute quotas
+apiVersion: v1
+kind: ResourceQuota
+metadata:
+  name: core-apps-quota
+  namespace: core-apps
+spec:
+  hard:
+    requests.cpu: "16"
+    requests.memory: 32Gi
+    limits.cpu: "32"
+    limits.memory: 64Gi
+    pods: "50"
+    services.loadbalancers: "0" # Zero direct public exposure; must use internal ingress
+---
+# Golden Path Constraints: Default container resource requests & limits
+apiVersion: v1
+kind: LimitRange
+metadata:
+  name: core-apps-limits
+  namespace: core-apps
+spec:
+  limits:
+    - default:
+        cpu: "1"
+        memory: 1Gi
+      defaultRequest:
+        cpu: 250m
+        memory: 512Mi
+      max:
+        cpu: "4"
+        memory: 8Gi
+      min:
+        cpu: 100m
+        memory: 128Mi
+      type: Container
+---
+# Calico / Azure CNI Microsegmentation: Default Deny Ingress with controlled allow
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: isolate-tenant-workloads
+  namespace: core-apps
+spec:
+  podSelector: {}
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress:
+    # Allow intra-namespace pod-to-pod communication
+    - from:
+        - podSelector: {}
+    # Allow traffic from enterprise ingress controller namespace
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: ingress-nginx
+      ports:
+        - protocol: TCP
+          port: 8080
+  egress:
+    # Allow intra-cluster DNS resolution
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: kube-system
+          podSelector:
+            matchLabels:
+              k8s-app: kube-dns
+      ports:
+        - protocol: UDP
+          port: 53
+        - protocol: TCP
+          port: 53
+    # Allow intra-namespace pod egress
+    - to:
+        - podSelector: {}

@@ -1,0 +1,40 @@
+# ============================================================================
+# ArgoCD Root App-of-Apps Orchestrator
+# Platform Engineering Golden Path GitOps Delivery
+# Author: Rahul Goyal (14+ Years Total IT | Senior DevOps Engineer)
+# ============================================================================
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: platform-root-app-of-apps
+  namespace: argocd
+  labels:
+    tier: platform-infrastructure
+    managed-by: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/rahulgoyaldevops/kubernetes-production-aks.git
+    targetRevision: main
+    path: gitops/apps
+    recurse: true
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: argocd
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+      allowEmpty: false
+    syncOptions:
+      - CreateNamespace=true
+      - ApplyOutOfSyncOnly=true
+      - PrunePropagationPolicy=foreground
+    retry:
+      limit: 5
+      backoff:
+        duration: 5s
+        factor: 2
+        maxDuration: 3m
