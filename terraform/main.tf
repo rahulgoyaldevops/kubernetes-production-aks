@@ -1,4 +1,4 @@
-﻿# ============================================================================
+# ============================================================================
 # Production Enterprise Azure Kubernetes Service (AKS) Architecture
 # Designed & Implemented by: Rahul Goyal (14+ Years Total IT | Senior DevOps Engineer)
 # ============================================================================
@@ -8,7 +8,7 @@ terraform {
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = "~> 4.0"
+      version = "~> 5.13"
     }
   }
 }
