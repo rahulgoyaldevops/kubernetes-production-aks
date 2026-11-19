@@ -1,7 +1,7 @@
 <div align="center">
 
 # ☸️ Production-Grade AKS — Kubernetes on Azure
-
+[![AKS Platform CI](https://github.com/rahulgoyaldevops/kubernetes-production-aks/actions/workflows/aks-ci.yml/badge.svg)](https://github.com/rahulgoyaldevops/kubernetes-production-aks/actions/workflows/aks-ci.yml)
 [![Kubernetes](https://img.shields.io/badge/Kubernetes-AKS-326CE5?style=for-the-badge&logo=kubernetes&logoColor=white)](https://azure.microsoft.com/en-us/products/kubernetes-service)
 [![Terraform](https://img.shields.io/badge/Terraform-Provisioning-623CE4?style=for-the-badge&logo=terraform&logoColor=white)](https://www.terraform.io/)
 [![ArgoCD](https://img.shields.io/badge/ArgoCD-GitOps-EF7B4D?style=for-the-badge&logo=argo&logoColor=white)](https://argo-cd.readthedocs.io/)
@@ -24,7 +24,8 @@
 > - **Cost efficiency** — right-sized nodes, autoscaling, spot instances
 
 ## 🏗️ Architecture
-
+> 📘 **Architecture Decision Record:** [ADR-001: AKS Platform Architecture](docs/adr/001-aks-platform-architecture.md)
+> 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
 │                    AZURE KUBERNETES SERVICE                      │
